@@ -3,20 +3,23 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
 )
+
+func handleHealthz(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain;charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
 
 func main() {
 	mux := http.NewServeMux()
 
-	mux.Handle("/", http.FileServer(http.Dir(".")))
+	mux.Handle("/app", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	mux.HandleFunc("/healthz", handleHealthz)
 
 	s := &http.Server{
-		Addr:           ":8080",
-		Handler:        mux,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:    ":8080",
+		Handler: mux,
 	}
 
 	err := s.ListenAndServe()
